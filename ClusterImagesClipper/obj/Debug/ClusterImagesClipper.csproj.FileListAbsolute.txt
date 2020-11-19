@@ -1,0 +1,14 @@
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\bin\Debug\ClusterImagesClipper.exe.config
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\bin\Debug\ClusterImagesClipper.exe
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\bin\Debug\ClusterImagesClipper.pdb
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\bin\Debug\clipper_library.dll
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.csprojAssemblyReference.cache
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.Properties.Resources.resources
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.csproj.GenerateResource.cache
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.csproj.CoreCompileInputs.cache
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.csproj.CopyComplete
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.exe
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.pdb
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\obj\Debug\ClusterImagesClipper.Form1.resources
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\bin\Debug\System.ValueTuple.dll
+C:\Users\otgu\source\repos\ClusterImagesClipper\ClusterImagesClipper\bin\Debug\System.ValueTuple.xml
