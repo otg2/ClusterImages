@@ -34,11 +34,31 @@ namespace ClusterImagesClipper.Aggregation
 			  PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
 
 			Utils.DrawPolygons(boundarySolution, Color.Orange, true, form);
-			var totalBoundaryArea = Utils.PolygonSignedArea(boundaryPaths);
+			var totalShapeArea = Utils.PolygonSignedArea(shapesWithinBoundaries);
 			var boundaryIntersection = Utils.PolygonSignedArea(boundarySolution);
-			Logger.SimpleDebug("Area of shapes within boundary is " + boundaryIntersection + " out of " + totalBoundaryArea);
-			return totalBoundaryArea - boundaryIntersection;
+			Logger.SimpleDebug("Area of shapes within boundary is " + boundaryIntersection + " out of " + totalShapeArea);
+			return (totalShapeArea - boundaryIntersection) * Config.IntersectionErrorModifier;
+		}
+		public static double SingleUnoccupiedBoundaryArea(Shape boundaryShape, Shape shape)
+		{
+			if (boundaryShape == null) return 0.0;
+			Paths boundarySolution = new Paths(1);
+			Paths boundaryPaths = new Paths(1);
+			Paths shapesWithinBoundaries = new Paths(1);
+			shapesWithinBoundaries.Add(new Path(shape.GetDrawingCoordinates()));
 
+			boundaryPaths.Add(new Path(boundaryShape.GetDrawingCoordinates()));
+
+			Clipper c = new Clipper();
+			c.AddPolygons(boundaryPaths, PolyType.ptSubject);
+			c.AddPolygons(shapesWithinBoundaries, PolyType.ptClip);
+			c.Execute(ClipType.ctDifference, boundarySolution,
+			  PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+			var totalShapeArea = Utils.PolygonSignedArea(shapesWithinBoundaries);
+			var boundaryIntersection = Utils.PolygonSignedArea(boundarySolution);
+			Logger.SimpleDebug("Area of shapes within boundary is " + boundaryIntersection + " out of " + totalShapeArea);
+			return (totalShapeArea - boundaryIntersection) * Config.IntersectionErrorModifier;
 		}
 	}
 }

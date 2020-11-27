@@ -56,7 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Aggregation\OutOfBoundaryError.cs" />
-    <Compile Include="Aggregation\TotalIntersectionError.cs" />
+    <Compile Include="Aggregation\IntersectionError.cs" />
     <Compile Include="AutoCrop.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Form1.cs">

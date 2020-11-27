@@ -28,7 +28,7 @@ namespace ClusterImagesClipper
             return null;
         }
 
-        public static List<Shape> GenerateShapes(string sourceFolder, string targetFolder)
+        public static List<Shape> GenerateShapes(string sourceFolder, string targetFolder, Shape boundaryShapeRef)
         {
             int assignIndex = 1;
             int assignedWidth = 0;
@@ -41,7 +41,7 @@ namespace ClusterImagesClipper
             {
                 if (file.Contains("boundary")) continue; // Skip adding boundary in shapes, that comes later
                 var shape = new Shape(file, sourceFolder, targetFolder, assignIndex, new Point(assignedWidth, assignedHeight));
-                shape.Rotation = 0;
+                shape.BoundaryShapeRef = boundaryShapeRef;
                 shapes.Add(shape);
 
                 assignIndex++;
@@ -75,16 +75,60 @@ namespace ClusterImagesClipper
         public static Bitmap FilepathToBitmap(string filePath)
         {
             Bitmap bitmap;
-            using (Stream bmpStream = System.IO.File.Open(filePath, System.IO.FileMode.Open))
+            using (Stream bmpStream = File.Open(filePath, FileMode.Open))
             {
                 Image image = Image.FromStream(bmpStream);
                 bitmap = new Bitmap(image);
-
+            }
+            // THINK: Do we want to scale down the boundary shape?
+            if (Config.ScaleImages && !filePath.Contains("boundary"))
+            {
+                if(Config.ScaleUseFactoring)
+                    bitmap = new Bitmap(bitmap, new Size(bitmap.Width / Config.ScaleFactor, bitmap.Height / Config.ScaleFactor));
+                else
+                {
+                    var targetFactor = (double)bitmap.Width / Config.ScaleTargetWidth;
+                    var width = Convert.ToInt32(bitmap.Width / targetFactor);
+                    var height = Convert.ToInt32(bitmap.Height / targetFactor);
+                    bitmap = new Bitmap(bitmap,  new Size(width, height));
+                }
             }
             return bitmap;
         }
 
-        // TODO: Potentially scale the images during preprocess and scale out again when exporting
+        // TODO: Use optimized interpolation for resizing?
+        /// <summary>
+        /// Resize the image to the specified width and height.
+        /// </summary>
+        /// <param name="image">The image to resize.</param>
+        /// <param name="width">The width to resize to.</param>
+        /// <param name="height">The height to resize to.</param>
+        /// <returns>The resized image.</returns>
+        /*public static Bitmap ResizeImage(Image image, int width, int height)
+        {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+
+            return destImage;
+        }*/
+
         // TODO: Fix bounding bound of shape 2 (curved forms)
         // TODO: When that is done, fix ordering of point. Can be done via clipper and no path intersection
         public static Image TrimWhiteSpace(Shape shape, Bitmap bmp)
@@ -234,14 +278,15 @@ namespace ClusterImagesClipper
             ClearDirectory(targetFolder);
             // Have their location correct and name them by the order of their respective layers. 
             // Draw index, draw by descending order
-            var shapesDrawingOrder = DrawingOrder(shapes, ShapeDrawingOrder.None);
+            var shapesDrawingOrder = DrawingOrder(shapes, ShapeDrawingOrder.DownToUp);
             var orderIndex = shapesDrawingOrder.Count;
             foreach (var shape in shapesDrawingOrder)
             {
                 SaveImage(targetFolder, width, height, shape, orderIndex);
                 orderIndex--;
             }
-            SaveImage(targetFolder, width, height, boundaryShape, 0);
+            if(boundaryShape != null)
+                SaveImage(targetFolder, width, height, boundaryShape, 0);
         }
 
         private static void ClearDirectory(string path)

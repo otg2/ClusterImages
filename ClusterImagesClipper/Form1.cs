@@ -32,7 +32,7 @@ namespace ClusterImagesClipper
            
 			// If we want to fit clustering within a specific shape, make the error function based on fitness within said space
 			boundaryShape = AutoCrop.GenerateBoundaryShape(sourceFolder, targetFolder);
-			shapes = AutoCrop.GenerateShapes(sourceFolder, targetFolder);
+			shapes = AutoCrop.GenerateShapes(sourceFolder, targetFolder, boundaryShape);
 
 			InitializeComponent();
 		}
@@ -51,9 +51,6 @@ namespace ClusterImagesClipper
 			System.IO.Directory.CreateDirectory(expandedTargetFolder);
 		}
 
-		// TODO: Add to aggregates
-		
-		// TODO: Clean up this function and split up into aggregates based on error calculation
 		void test()
         {
 			var totalError = 0.0;
@@ -64,7 +61,7 @@ namespace ClusterImagesClipper
 			{
 				outOfBboundaryError = Aggregation.OutOfBoundaryError.UnoccupiedBoundaryArea(boundaryShape, shapes, this);
 			}
-			shapeIntersectionError = Aggregation.TotalIntersectionError.ShapeIntersection(boundaryShape, shapes, this);
+			shapeIntersectionError = Aggregation.IntersectionError.TotalShapeIntersection(shapes, this);
 
 
 			var drawableShapes = new Paths(shapes.Count);
@@ -78,8 +75,8 @@ namespace ClusterImagesClipper
 			Logger.SimpleDebug("Total area out of bounds " + outOfBboundaryError);
 			Logger.SimpleDebug("Total area of intersection " + shapeIntersectionError);
 
-			totalError += outOfBboundaryError * Config.BoundaryErrorModifier;
-			totalError += shapeIntersectionError * Config.IntersectionErrorModifier;
+			totalError += outOfBboundaryError;
+			totalError += shapeIntersectionError;
 			Logger.SimpleDebug("Total error " + totalError);
 
 			// TODO: Start look at converge/ml formula
@@ -101,22 +98,39 @@ namespace ClusterImagesClipper
 			Debug.WriteLine("Starting...");
 			Graphics g = this.CreateGraphics();
 			g.FillRectangle(Brushes.White, 0, 0, Width, Height);
+
+			//if(Config.NumberOfRuns == 1)
+			// TODO: Add a reset button?
 			minError = int.MaxValue;
 
-			for (int i = 0; i < Config.RoughCalculate; i++)
+            var rand = new Random();
+
+			for (int i = 0; i < Config.NumberOfRuns; i++)
             {
-				var rand = new Random();
+				// Always draw the best possible outcome when we are not drawing lines
+				if (i == Config.NumberOfRuns - 1 && !Config.DrawLinesOnInterface )
+                {
+					Config.DrawLinesOnInterface = true;
+					Utils.DrawBestPositionsInterface(boundaryShape, shapes, this);
+					// TODO: Draw min error on interface
+					Config.DrawLinesOnInterface = false;
+				}
+
+				//var collidingShapes = Utils.GetCollidingShapes(shapes);
+
+				// Shuffle them to change order of new position method
+				shapes.Shuffle();
+
 				// To test error
 				foreach (var shape in shapes)
 				{
-					// This obvious doesn't work. First, simply make random based on image size
-					// Should be config
-					var xRand = rand.Next(0, 500);
-					var yRand = rand.Next(0, 500);
-					var rotation = rand.Next(-Config.MaxRotation, Config.MaxRotation);
-					shape.Location = new Point(xRand, yRand);
-					shape.AddRotation(rotation);
-					Logger.SimpleDebug("Shape " + shape.Index + " is " + shape.Location);
+					//var collisions = collidingShapes.Where(x => x.Item1 == shape.Index || x.Item2 == shape.Index).ToList();
+					if(shape.FileName=="15")
+                    {
+						var amm = 43;
+                    }
+					shape.FindNewPosition(rand, shapes);
+					//collidingShapes = collidingShapes.Where(x => x.Item1 != shape.Index && x.Item2 != shape.Index).ToList();
 				}
 				test();
 			}
@@ -128,9 +142,12 @@ namespace ClusterImagesClipper
 		private void ExportImages() // object sender, EventArgs e
 		{
 			// On complete, expand all shapes with dimension of max width and height.
-			var maxWidth = boundaryShape.BestLocation.X + boundaryShape.ImageRef.Width;
-			var maxHeight = boundaryShape.BestLocation.Y + boundaryShape.ImageRef.Height;
-
+			var maxWidth = boundaryShape != null 
+				? boundaryShape.BestLocation.X + boundaryShape.ImageRef.Width
+				: 0;
+			var maxHeight = boundaryShape != null
+				? boundaryShape.BestLocation.Y + boundaryShape.ImageRef.Height
+				: 0;
 			foreach (var shape in shapes)
             {
 				var shapeTotalWidth = shape.BestLocation.X + shape.ImageRef.Width;

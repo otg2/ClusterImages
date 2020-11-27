@@ -12,9 +12,9 @@ using Paths = System.Collections.Generic.List<System.Collections.Generic.List<Cl
 
 namespace ClusterImagesClipper.Aggregation
 {
-    public static class TotalIntersectionError
+    public static class IntersectionError
     {
-        public static double ShapeIntersection(Shape boundaryShape, List<Shape> shapes, Form1 form)
+        public static double TotalShapeIntersection(List<Shape> shapes, Form1 form)
         {
 			var collidedShapes = new List<(int, int)>();
 			Paths subject = new Paths(1);
@@ -46,6 +46,7 @@ namespace ClusterImagesClipper.Aggregation
 
 				Paths solution = new Paths(1);
 
+				// TODO: Create a function to execute intersection
 				Clipper c = new Clipper();
 				c.AddPolygons(subject, PolyType.ptSubject);
 				c.AddPolygons(collidingClips, PolyType.ptClip);
@@ -57,7 +58,34 @@ namespace ClusterImagesClipper.Aggregation
 				Logger.SimpleDebug("Area of intersection for shape " + shape.Index + " is " + intersectionError);
 				totalError += intersectionError;
 			}
-			return totalError;
+			return totalError * Config.IntersectionErrorModifier;
 		}
-    }
+
+		public static double SingleShapeIntersection(Shape shape, Shape externalShape)
+		{
+			if (externalShape == null) return 0.0;
+			Paths subject = new Paths(1);
+			Paths collidingClips = new Paths(1);
+
+			// Add shape to subject
+			subject = new Paths(1);
+			subject.Add(new Path(shape.GetDrawingCoordinates()));
+
+			// Find all shapes with collision distance and add to temporary clib
+			collidingClips = new Paths(2);
+			collidingClips.Add(new Path(externalShape.GetDrawingCoordinates()));
+
+			Paths solution = new Paths(1);
+
+			Clipper c = new Clipper();
+			c.AddPolygons(subject, PolyType.ptSubject);
+			c.AddPolygons(collidingClips, PolyType.ptClip);
+			c.Execute(ClipType.ctIntersection, solution,
+				PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+			var intersectionError = Utils.PolygonSignedArea(solution);
+			Logger.SimpleDebug("Area of intersection for shape " + shape.Index + " is " + intersectionError);
+			return intersectionError * Config.IntersectionErrorModifier;
+		}
+	}
 }
